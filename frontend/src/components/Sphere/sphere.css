@@ -1,0 +1,24 @@
+.austin-sphere {
+  position: relative;
+  width: min(52vw, 620px);
+  height: min(52vw, 620px);
+
+  min-width: 420px;
+  min-height: 420px;
+
+  overflow: hidden;
+
+  z-index: 0;
+}
+
+.austin-sphere canvas {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  z-index: 0;
+
+  pointer-events: none;
+}

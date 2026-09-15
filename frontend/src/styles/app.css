@@ -1,0 +1,403 @@
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden;
+  background: #03070b;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(0, 125, 180, 0.12),
+      transparent 35%
+    ),
+    #03070b;
+}
+
+
+/* =========================
+   GRID
+   ========================= */
+
+.background-grid {
+  position: fixed;
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0.18;
+
+  background-image:
+    linear-gradient(
+      rgba(80, 190, 255, 0.07) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(80, 190, 255, 0.07) 1px,
+      transparent 1px
+    );
+
+  background-size: 48px 48px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      black,
+      transparent 85%
+    );
+
+  z-index: 0;
+}
+
+
+/* =========================
+   TOPBAR
+   ========================= */
+
+.topbar {
+  position: relative;
+
+  z-index: 100;
+
+  height: 74px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 30px;
+
+  border-bottom:
+    1px solid
+    rgba(80, 190, 255, 0.12);
+
+  background:
+    rgba(3, 7, 11, 0.92);
+}
+
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border:
+    1px solid
+    rgba(80, 190, 255, 0.5);
+
+  color: #6fdcff;
+
+  box-shadow:
+    0 0 24px
+    rgba(50, 180, 255, 0.12);
+}
+
+
+.brand strong {
+  display: block;
+
+  font-size: 13px;
+
+  letter-spacing: 0.28em;
+}
+
+
+.brand span:not(.brand-mark) {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #4e7085;
+
+  font-size: 8px;
+
+  letter-spacing: 0.2em;
+}
+
+
+/* =========================
+   TOP ACTIONS
+   ========================= */
+
+.top-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  position: relative;
+
+  z-index: 101;
+}
+
+
+.top-action {
+  position: relative;
+
+  z-index: 102;
+
+  border:
+    1px solid
+    rgba(80, 190, 255, 0.2);
+
+  background:
+    rgba(5, 15, 22, 0.8);
+
+  color: #6f9bb0;
+
+  padding: 7px 9px;
+
+  cursor: pointer;
+
+  font-size: 8px;
+
+  letter-spacing: 0.16em;
+}
+
+
+.top-action:hover {
+  border-color:
+    rgba(80, 190, 255, 0.5);
+
+  color: #72d9ff;
+
+  background:
+    rgba(10, 25, 35, 0.9);
+}
+
+
+/* =========================
+   STATUS
+   ========================= */
+
+.system-status {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  color: #628397;
+
+  font-size: 9px;
+
+  letter-spacing: 0.16em;
+}
+
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+}
+
+
+.status-dot.online {
+  background: #65ddff;
+
+  box-shadow:
+    0 0 12px
+    #65ddff;
+}
+
+
+.status-dot.offline {
+  background: #b15d5d;
+}
+
+
+/* =========================
+   MAIN
+   ========================= */
+
+main {
+  position: relative;
+
+  z-index: 2;
+
+  height: calc(100vh - 74px);
+
+  overflow: hidden;
+}
+
+
+.main-interface {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 20px;
+
+  padding: 30px;
+}
+
+
+/* =========================
+   SPHERE
+   ========================= */
+
+.sphere-area {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  z-index: 2;
+}
+
+
+.sphere-label {
+  position: absolute;
+
+  bottom: 12%;
+
+  z-index: 5;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  pointer-events: none;
+}
+
+
+.sphere-label span {
+  color: #75dcff;
+
+  font-size: 10px;
+
+  letter-spacing: 0.4em;
+}
+
+
+.sphere-label small {
+  margin-top: 5px;
+
+  color: #416276;
+
+  font-size: 8px;
+
+  letter-spacing: 0.2em;
+}
+
+
+/* =========================
+   HISTORY
+   ========================= */
+
+.history-toggle {
+  position: fixed;
+
+  right: 24px;
+  bottom: 22px;
+
+  z-index: 200;
+
+  border:
+    1px solid
+    rgba(80, 190, 255, 0.25);
+
+  background:
+    rgba(5, 15, 22, 0.9);
+
+  color: #72d9ff;
+
+  padding: 10px 14px;
+
+  cursor: pointer;
+
+  font-size: 9px;
+
+  letter-spacing: 0.16em;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 1050px) {
+  body {
+    overflow: auto;
+  }
+
+  .app {
+    min-height: 100vh;
+
+    overflow: visible;
+  }
+
+  main {
+    height: auto;
+
+    min-height:
+      calc(100vh - 74px);
+
+    overflow: visible;
+  }
+
+  .main-interface {
+    min-height:
+      calc(100vh - 74px);
+
+    height: auto;
+
+    flex-direction: column;
+
+    padding: 20px;
+  }
+
+  .sphere-area {
+    width: 100%;
+  }
+
+  .austin-sphere {
+    width: min(80vw, 520px);
+    height: min(80vw, 520px);
+
+    min-width: 300px;
+    min-height: 300px;
+  }
+}
