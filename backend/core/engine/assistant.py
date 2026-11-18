@@ -1,5 +1,5 @@
-from pathlib import Path
 
+from pathlib import Path
 import subprocess
 
 from dotenv import load_dotenv
@@ -57,6 +57,11 @@ from history.history_context import (
 
 from personality.greetings import saudacao_inicial
 
+from memory.memory_learning import (
+    guardar_memoria_explicita,
+    analisar_memoria_automatica,
+    obter_memorias_relevantes,
+)
 
 load_dotenv()
 
@@ -81,9 +86,7 @@ class AustinAssistant:
 
         self.search_client = criar_cliente_busca()
 
-        instructions = (
-            self._carregar_instructions()
-        )
+        instructions = self._carregar_instructions()
 
         self.messages = criar_conversa(
             instructions
@@ -130,9 +133,10 @@ class AustinAssistant:
 
     def _resetar_sessao(self):
 
-        # ==================================================
+        # ========================================
         # FINALIZAR SESSÃO ANTERIOR NO BANCO
-        # ==================================================
+        # ========================================
+
         if self.historico_iniciado:
             finalizar_historico()
 
@@ -253,7 +257,6 @@ class AustinAssistant:
 
                 self.awaiting_confirmation = False
 
-                # Finaliza a sessão SQLite atual
                 if self.historico_iniciado:
                     finalizar_historico()
 
@@ -267,7 +270,6 @@ class AustinAssistant:
 
                 self.state = "idle"
 
-                # Limpa os logs da sessão encerrada.
                 limpar_logs()
 
                 self.awaiting_shutdown_confirmation = True
@@ -377,12 +379,6 @@ class AustinAssistant:
                         True
                 }
 
-                # O frontend recebe primeiro a confirmação.
-                #
-                # Em seguida iniciamos o processo separado
-                # responsável por desligar os componentes
-                # do Austin.
-
                 self._executar_shutdown()
 
                 return resposta
@@ -485,6 +481,108 @@ class AustinAssistant:
         }
 
 
+    def _registrar_memorizacao_explicita(
+        self,
+        pergunta
+    ):
+        """
+        Processa pedidos explícitos de memorização.
+
+        Retorna None quando a mensagem não é um pedido
+        explícito. Caso seja, registra a interação no
+        histórico e devolve a resposta correspondente.
+        """
+
+        memoria = guardar_memoria_explicita(
+            pergunta
+        )
+
+        if not memoria:
+            return None
+
+        if memoria["status"] == "saved":
+
+            resposta = (
+                "Informação registrada na minha memória."
+            )
+
+            log_info(
+                "Nova memória explícita registrada."
+            )
+
+        elif memoria["status"] == "already_exists":
+
+            resposta = (
+                "Essa informação já está registrada "
+                "na minha memória."
+            )
+
+            log_info(
+                "Memória explícita duplicada ignorada."
+            )
+
+        elif memoria["status"] == "blocked":
+
+            resposta = (
+                "Não posso armazenar essa informação, "
+                "pois ela contém dados sensíveis, como "
+                "credenciais ou chaves de acesso."
+            )
+
+            log_info(
+                "Tentativa de armazenar informação sensível bloqueada."
+            )
+
+        else:
+            resposta = (
+                "Não foi possível registrar essa informação."
+            )
+
+        if not self.historico_iniciado:
+
+            iniciar_historico(
+                pergunta
+            )
+
+            self.historico_iniciado = True
+
+        adicionar_usuario(
+            self.messages,
+            pergunta
+        )
+
+        adicionar_assistente(
+            self.messages,
+            resposta
+        )
+
+        adicionar_mensagem(
+            "user",
+            pergunta
+        )
+
+        adicionar_mensagem(
+            "assistant",
+            resposta
+        )
+
+        self.state = "idle"
+
+        return {
+            "response":
+                resposta,
+
+            "state":
+                "idle",
+
+            "requires_confirmation":
+                False,
+
+            "session_ended":
+                False
+        }
+
+
     def _preparar_mensagem(
         self,
         pergunta
@@ -493,6 +591,39 @@ class AustinAssistant:
         messages_para_envio = (
             self.messages.copy()
         )
+
+
+        # ========================================
+        # MEMÓRIAS DO USUÁRIO
+        # ========================================
+
+        memorias = obter_memorias_relevantes(
+            pergunta
+        )
+
+        if memorias:
+
+            contexto_memoria = "\n".join(
+                f"- {memory['content']}"
+                for memory in memorias
+            )
+
+            messages_para_envio.append({
+                "role":
+                    "system",
+
+                "content": (
+                    "MEMÓRIAS RELEVANTES DO USUÁRIO:\n\n"
+                    f"{contexto_memoria}\n\n"
+                    "Utilize essas informações somente quando "
+                    "forem relevantes para a solicitação atual."
+                )
+            })
+
+
+        # ========================================
+        # CONTEXTO DE CONVERSA ANTERIOR
+        # ========================================
 
         contexto_historico = (
             obter_contexto_historico()
@@ -517,6 +648,10 @@ Contexto da conversa anterior:
 """
             })
 
+
+        # ========================================
+        # PESQUISA NA INTERNET
+        # ========================================
 
         if precisa_pesquisa(
             pergunta
@@ -632,6 +767,20 @@ Contexto:
 
 
             # ========================================
+            # MEMORIZAÇÃO EXPLÍCITA
+            # ========================================
+
+            resposta_memoria = (
+                self._registrar_memorizacao_explicita(
+                    pergunta
+                )
+            )
+
+            if resposta_memoria:
+                return resposta_memoria
+
+
+            # ========================================
             # SELEÇÃO DE HISTÓRICO
             # ========================================
 
@@ -738,6 +887,16 @@ Contexto:
 
             adicionar_mensagem(
                 "assistant",
+                resposta
+            )
+
+
+            # ========================================
+            # APRENDIZADO AUTOMÁTICO
+            # ========================================
+
+            analisar_memoria_automatica(
+                pergunta,
                 resposta
             )
 
@@ -892,6 +1051,41 @@ Contexto:
 
                     "session_ended":
                         False,
+
+                    "shutdown_requested":
+                        False
+                }
+
+                return
+
+
+            # ========================================
+            # MEMORIZAÇÃO EXPLÍCITA
+            # ========================================
+
+            resposta_memoria = (
+                self._registrar_memorizacao_explicita(
+                    pergunta
+                )
+            )
+
+            if resposta_memoria:
+
+                yield {
+                    "type":
+                        "done",
+
+                    "content":
+                        resposta_memoria["response"],
+
+                    "state":
+                        resposta_memoria["state"],
+
+                    "requires_confirmation":
+                        resposta_memoria["requires_confirmation"],
+
+                    "session_ended":
+                        resposta_memoria["session_ended"],
 
                     "shutdown_requested":
                         False
@@ -1059,6 +1253,17 @@ Contexto:
                 "assistant",
                 resposta
             )
+
+
+            # ========================================
+            # APRENDIZADO AUTOMÁTICO
+            # ========================================
+
+            analisar_memoria_automatica(
+                pergunta,
+                resposta
+            )
+
 
             self.state = "idle"
 
